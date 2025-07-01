@@ -1,0 +1,7 @@
+{
+    "git.ignoreLimitWarning": true,
+    "workbench.colorCustomizations": {
+        "editorLineNumber.foreground": "#5A5A5A",
+        "editorLineNumber.activeForeground": "#00FF9F"
+    }
+}
