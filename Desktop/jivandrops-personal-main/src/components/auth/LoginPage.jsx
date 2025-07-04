@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext';
 import { FaHeartbeat, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
-import LoadingSpinner from '../common/LoadingSpinner';
+// import LoadingSpinner from '../common/LoadingSpinner';
 import axios from 'axios';
 
 const LoginPage = () => {
@@ -40,7 +40,7 @@ const LoginPage = () => {
       else
         setError('Invalid credentials or role');
       
-    } catch  {
+    } catch{
       setError('An error occurred during login');
     } finally {
       setIsLoading(false);
@@ -196,10 +196,9 @@ const LoginPage = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-             <Link to="/register" className="text-primary-600 hover:text-primary-500 font-medium">
-  register
-</Link>
-
+         <Link to="/register" className="text-primary-600 hover:text-primary-500 font-medium">
+    Sign up
+  </Link>
             </p>
           </div>
 

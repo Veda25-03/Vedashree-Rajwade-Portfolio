@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom'; // ✅ added for login button
 import { useAuth } from '../../contexts/AuthContext';
-import { FaSearch, FaBell, FaUserCircle, FaSignOutAlt, FaCog, FaUser } from 'react-icons/fa';
+import { FaSearch, FaBell, FaSignOutAlt, FaCog, FaUser } from 'react-icons/fa';
 
 const TopNavbar = () => {
   const { user, logout } = useAuth();
@@ -97,51 +98,63 @@ const TopNavbar = () => {
             )}
           </div>
 
-          {/* Profile Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 focus:outline-none"
+          {/* Login Button if not logged in */}
+          {!user && (
+            <Link
+              to="/login"
+              className="text-sm bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition"
             >
-              <img
-                src={user?.avatar}
-                alt={user?.name}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              <div className="text-left">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.role}</p>
-              </div>
-            </button>
+              Login
+            </Link>
+          )}
 
-            {/* Profile Dropdown */}
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                <div className="p-4 border-b border-gray-200">
+          {/* Profile Menu */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 focus:outline-none"
+              >
+                <img
+                  src={user?.avatar}
+                  alt={user?.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="text-left">
                   <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-xs text-gray-500">{user?.role}</p>
                 </div>
-                <div className="py-2">
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    <FaUser className="w-4 h-4 mr-3" />
-                    Profile Settings
-                  </button>
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    <FaCog className="w-4 h-4 mr-3" />
-                    Preferences
-                  </button>
-                  <hr className="my-2" />
-                  <button 
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <FaSignOutAlt className="w-4 h-4 mr-3" />
-                    Sign Out
-                  </button>
+              </button>
+
+              {/* Profile Dropdown */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="p-4 border-b border-gray-200">
+                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <div className="py-2">
+                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <FaUser className="w-4 h-4 mr-3" />
+                      Profile Settings
+                    </button>
+                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <FaCog className="w-4 h-4 mr-3" />
+                      Preferences
+                    </button>
+                    <hr className="my-2" />
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <FaSignOutAlt className="w-4 h-4 mr-3" />
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

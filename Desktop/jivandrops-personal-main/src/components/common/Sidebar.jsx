@@ -13,7 +13,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
   const menuItems = [
     { icon: FaHome, label: 'Dashboard', path: '/dashboard' },
     { icon: MdRequestPage, label: 'Blood Requests', path: '/dashboard/requests' },
-    { icon: MdBloodtype, label: 'Inventory', path: '/dashboard/components' },
+    { icon: MdBloodtype, label: 'Blood Components', path: '/dashboard/components' },
     { icon: FaChartLine, label: 'Trends & Analytics', path: '/dashboard/analytics' },
     { icon: FaHistory, label: 'Activity Logs', path: '/dashboard/logs' }
   ];

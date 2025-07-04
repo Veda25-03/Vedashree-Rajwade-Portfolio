@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaPhone, FaHospital } from 'react-icons/fa';
 import { MdBloodtype } from 'react-icons/md';
 import { MOCK_DATA, REQUEST_STATUS, BLOOD_GROUPS, INDIAN_HOSPITALS } from '../../utils/constants';
 import Modal from '../common/Modal';
+import axios from 'axios';
 
 const BloodRequests = () => {
-  const [requests, setRequests] = useState(MOCK_DATA.requests);
+  const [requests, setRequests] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -26,38 +27,94 @@ const BloodRequests = () => {
     expectedDate: ''
   });
 
-  const handleAddRequest = (e) => {
-    e.preventDefault();
-    const request = {
-      id: `REQ${String(requests.length + 1).padStart(3, '0')}`,
-      hospital: newRequest.hospital,
-      bloodGroup: newRequest.bloodGroup,
-      units: parseInt(newRequest.units),
-      urgency: newRequest.urgency,
-      status: newRequest.urgency === 'Critical' ? 'Critical' : 'Pending',
-      requestDate: new Date().toISOString().split('T')[0],
-      patientName: newRequest.patientName,
-      patientAge: parseInt(newRequest.patientAge),
-      reason: newRequest.reason,
-      contactNumber: newRequest.contactNumber,
-      requester: newRequest.requester,
-      expectedDate: newRequest.expectedDate
-    };
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try{
+        const response = await axios.get('http://localhost:3000/api/requests',{
+          headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+        if(response.status === 201){
+          setRequests(response.data);
+        }
+      } catch(err){
+        console.error('Error fetching requests:', err);
+      }
+    }
+    fetchRequests();
+  }, [])
 
-    setRequests([request, ...requests]);
-    setShowAddModal(false);
-    setNewRequest({
-      hospital: '',
-      bloodGroup: '',
-      units: '',
-      urgency: 'Normal',
-      patientName: '',
-      patientAge: '',
-      reason: '',
-      contactNumber: '',
-      requester: '',
-      expectedDate: ''
-    });
+  const handleAddRequest = async (e) => {
+    e.preventDefault();
+    try{
+      const response = await axios.post('http://localhost:3000/api/requests', {
+        HospitalName : newRequest.hospital,
+        DocName : newRequest.requester,
+        PatientName: newRequest.patientName,
+        age : newRequest.patientAge,
+        BloodGroup: newRequest.bloodGroup,
+        Quantity: parseInt(newRequest.units),
+        Priority: newRequest.urgency,
+        Phone : newRequest.contactNumber,
+        description: newRequest.reason,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if(response.status === 201) {
+        console.log(response.data);
+        setRequests([response.data, ...requests]);
+        setShowAddModal(false);
+        setNewRequest({
+          hospital: '',
+          bloodGroup: '',
+          units: '',
+          urgency: 'Normal',
+          patientName: '',
+          patientAge: '',
+          reason: '',
+          contactNumber: '',
+          requester: '',
+          expectedDate: ''
+        });
+      }
+    } catch(err){
+      console.error('Error adding request:', err);
+      alert('Failed to add request. Please try again.');
+    }
+    // const request = {
+    //   id: `REQ${String(requests.length + 1).padStart(3, '0')}`,
+    //   hospital: newRequest.hospital,
+    //   bloodGroup: newRequest.bloodGroup,
+    //   units: parseInt(newRequest.units),
+    //   urgency: newRequest.urgency,
+    //   status: newRequest.urgency === 'Critical' ? 'Critical' : 'Pending',
+    //   requestDate: new Date().toISOString().split('T')[0],
+    //   patientName: newRequest.patientName,
+    //   patientAge: parseInt(newRequest.patientAge),
+    //   reason: newRequest.reason,
+    //   contactNumber: newRequest.contactNumber,
+    //   requester: newRequest.requester,
+    //   expectedDate: newRequest.expectedDate
+    // };
+
+    // setRequests([request, ...requests]);
+    // setShowAddModal(false);
+    // setNewRequest({
+    //   hospital: '',
+    //   bloodGroup: '',
+    //   units: '',
+    //   urgency: 'Normal',
+    //   patientName: '',
+    //   patientAge: '',
+    //   reason: '',
+    //   contactNumber: '',
+    //   requester: '',
+    //   expectedDate: ''
+    // });
   };
 
   const handleStatusChange = (requestId, newStatus) => {
@@ -67,11 +124,11 @@ const BloodRequests = () => {
   };
 
   const filteredRequests = requests.filter(request => {
-    const matchesSearch = request.hospital.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === '' || request.status === statusFilter;
-    const matchesBloodGroup = bloodGroupFilter === '' || request.bloodGroup === bloodGroupFilter;
+    const matchesSearch = request.HospitalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.PatientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.RequestID.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === '' || request.Status === statusFilter;
+    const matchesBloodGroup = bloodGroupFilter === '' || request.BloodGroup === bloodGroupFilter;
     
     return matchesSearch && matchesStatus && matchesBloodGroup;
   });
@@ -118,7 +175,7 @@ const BloodRequests = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Requests</p>
-              <p className="text-3xl font-bold text-gray-900">{MOCK_DATA.stats.totalRequests}</p>
+              <p className="text-3xl font-bold text-gray-900">{requests.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <MdBloodtype className="w-8 h-8 text-blue-600" />
@@ -130,7 +187,7 @@ const BloodRequests = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-              <p className="text-3xl font-bold text-yellow-600">{MOCK_DATA.stats.pendingRequests}</p>
+              <p className="text-3xl font-bold text-yellow-600">{requests.length}</p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-lg">
               <FaHospital className="w-8 h-8 text-yellow-600" />
@@ -142,7 +199,7 @@ const BloodRequests = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Critical Requests</p>
-              <p className="text-3xl font-bold text-red-600">{MOCK_DATA.stats.criticalRequests}</p>
+              <p className="text-3xl font-bold text-red-600">{2}</p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
               <FaPhone className="w-8 h-8 text-red-600" />
@@ -154,7 +211,7 @@ const BloodRequests = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Fulfilled Today</p>
-              <p className="text-3xl font-bold text-green-600">12</p>
+              <p className="text-3xl font-bold text-green-600">0</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
               <MdBloodtype className="w-8 h-8 text-green-600" />
@@ -225,48 +282,50 @@ const BloodRequests = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredRequests.map((request) => (
-                <tr key={request.id} className="hover:bg-gray-50">
+                <tr key={request.RequestID} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {request.id}
+                    {request.RequestID}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div>
-                      <div className="font-medium">{request.hospital.split(',')[0]}</div>
-                      <div className="text-gray-500">{request.requester}</div>
+                      <div className="font-medium">{request.HospitalName.split(',')[0]}</div>
+                      <div className="text-gray-500">{request.DocName}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div>
-                      <div className="font-medium">{request.patientName}</div>
-                      <div className="text-gray-500">Age: {request.patientAge}</div>
+                      <div className="font-medium">{request.PatientName}</div>
+                      <div className="text-gray-500">Age: {request.PatientAge}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      {request.bloodGroup}
+                      {request.BloodGroup}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {request.units}
+                    {request.Quantity}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getUrgencyColor(request.urgency)}`}>
-                      {request.urgency}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getUrgencyColor(request.Priority)}`}>
+                      {request.Priority}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      value={request.status}
+                      value={request.Status}
                       onChange={(e) => handleStatusChange(request.id, e.target.value)}
-                      className={`text-xs font-medium rounded-full px-2 py-1 border-0 ${getStatusColor(request.status)}`}
+                      className={`text-xs font-medium rounded-full px-2 py-1 border-0 ${getStatusColor(request.Status)}`}
                     >
-                      {Object.values(REQUEST_STATUS).map(status => (
-                        <option key={status} value={status}>{status}</option>
+                      {Object.values(REQUEST_STATUS).map(Status => (
+                        <option key={Status} value={Status}>{Status}</option>
                       ))}
                     </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {request.requestDate}
+                   {request?.SubmittedAt
+                ? new Date(request.SubmittedAt).toLocaleString()
+                : ''}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
@@ -458,19 +517,19 @@ const BloodRequests = () => {
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-500">Request ID:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.id}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.RequestID}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Hospital:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.hospital}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.HospitalName}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Requesting Doctor:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.requester}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.DocName}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Contact:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.contactNumber}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.Phone}</p>
                   </div>
                 </div>
               </div>
@@ -480,19 +539,19 @@ const BloodRequests = () => {
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-500">Patient Name:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.patientName}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.PatientName}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Age:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.patientAge} years</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.age} years</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Blood Group:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.bloodGroup}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.BloodGroup}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Units Needed:</span>
-                    <p className="text-sm text-gray-900">{selectedRequest.units}</p>
+                    <p className="text-sm text-gray-900">{selectedRequest.Quantity}</p>
                   </div>
                 </div>
               </div>
@@ -501,26 +560,28 @@ const BloodRequests = () => {
             <div>
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Medical Details</h4>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-900">{selectedRequest.reason}</p>
+                <p className="text-sm text-gray-900">{selectedRequest.description}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <span className="text-sm font-medium text-gray-500">Status:</span>
-                <p className={`text-sm font-medium ${getStatusColor(selectedRequest.status)}`}>
-                  {selectedRequest.status}
+                <p className={`text-sm font-medium ${getStatusColor(selectedRequest.Status)}`}>
+                  {selectedRequest.Status}
                 </p>
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-500">Urgency:</span>
-                <p className={`text-sm font-medium ${getUrgencyColor(selectedRequest.urgency)}`}>
-                  {selectedRequest.urgency}
+                <p className={`text-sm font-medium ${getUrgencyColor(selectedRequest.Priority)}`}>
+                  {selectedRequest.Priority}
                 </p>
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-500">Expected Date:</span>
-                <p className="text-sm text-gray-900">{selectedRequest.expectedDate}</p>
+                <p className="text-sm text-gray-900">{selectedRequest?.SubmittedAt
+                ? new Date(selectedRequest.SubmittedAt).toLocaleString()
+                : ''}</p>
               </div>
             </div>
           </div>

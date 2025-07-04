@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaExclamationTriangle, FaMapMarkerAlt } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import { FaPlus, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 import { MdBloodtype } from 'react-icons/md';
 import { MOCK_DATA, BLOOD_GROUPS } from '../../utils/constants';
 import Modal from '../common/Modal';
+import { use } from 'react';
+import axios from 'axios';
 
 const BloodComponents = () => {
-  const [inventory, setInventory] = useState(MOCK_DATA.bloodInventory);
+  const [inventory, setInventory] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState(null);
@@ -22,6 +24,28 @@ const BloodComponents = () => {
     expiryDate: '',
     notes: ''
   });
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try{
+        const response = await axios.get('http://localhost:3000/api/inventory',
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+        if(response.status === 201) {
+          setInventory(response.data);
+        }
+      } catch(err){
+        console.error('Error fetching inventory:', err);
+        setInventory(MOCK_DATA);
+      }
+    }
+
+    fetchInventory();
+  }, []);
 
   const handleAddComponent = (e) => {
     e.preventDefault();
@@ -64,33 +88,30 @@ const BloodComponents = () => {
   };
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.group.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBloodGroup = bloodGroupFilter === '' || item.group === bloodGroupFilter;
-    const matchesLocation = locationFilter === '' || item.location === locationFilter;
-    
-    return matchesSearch && matchesBloodGroup && matchesLocation;
+    const matchesSearch = item.BloodType.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesBloodGroup = bloodGroupFilter === '' || item.BloodType === bloodGroupFilter;
+    return matchesSearch && matchesBloodGroup;
   });
 
   const getStockLevel = (units) => {
     if (units < 20) return { level: 'Critical', color: 'text-red-600 bg-red-100' };
-    if (units < 50) return { level: 'Low', color: 'text-yellow-600 bg-yellow-100' };
+    if (units < 50) return { level: 'low', color: 'text-yellow-600 bg-yellow-100' };
     if (units < 100) return { level: 'Normal', color: 'text-green-600 bg-green-100' };
     return { level: 'High', color: 'text-blue-600 bg-blue-100' };
   };
 
   const locations = ['Main Bank', 'Emergency Ward', 'ICU Reserve', 'Critical Care', 'Surgery Unit'];
 
-  const totalUnits = inventory.reduce((sum, item) => sum + item.units, 0);
-  const criticalStock = inventory.filter(item => item.units < 20).length;
-  const expiringUnits = inventory.reduce((sum, item) => sum + item.expiringSoon, 0);
+  const totalUnits = inventory.reduce((sum, item) => sum + item.TotalStock, 0);
+  const criticalStock = inventory.filter(item => item.TotalStock < 20).length;
+  // const expiringUnits = inventory.reduce((sum, item) => sum + item.expiringSoon, 0);
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Blood Components</h1>
           <p className="text-gray-600 mt-1">Manage blood inventory and track components</p>
         </div>
         <button
@@ -148,7 +169,7 @@ const BloodComponents = () => {
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-gray-600">Expiring Soon</p>
-        <p className="text-3xl font-bold text-yellow-600">{expiringUnits}</p>
+        <p className="text-3xl font-bold text-yellow-600"></p>
       </div>
       <div className="bg-yellow-100 p-3 rounded-lg">
         <FaExclamationTriangle className="w-8 h-8 text-yellow-600" />
@@ -204,7 +225,7 @@ const BloodComponents = () => {
       {/* Blood Group Cards */}
      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
   {filteredInventory.map((item, index) => {
-    const stockLevel = getStockLevel(item.units);
+    const stockLevel = getStockLevel(item.TotalStock);
 
     return (
       <div
@@ -218,7 +239,7 @@ const BloodComponents = () => {
               <MdBloodtype className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">{item.group}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{item.BloodType}</h3>
               {/* <p className="text-sm text-gray-500">{item.location}</p> */}
             </div>
           </div>
@@ -233,23 +254,25 @@ const BloodComponents = () => {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Available Units:</span>
-            <span className="font-semibold text-gray-900">{item.units}</span>
+            <span className="font-semibold text-gray-900">{item.TotalStock}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600"> Units recieved today:</span>
-            <span className="font-semibold text-gray-900">{item.units}</span>
+            <span className="text-gray-600">Units received today:</span>
+            <span className="font-semibold text-gray-900">{item.UnitsReceivedToday}</span>
           </div>
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
             <span className="text-gray-600">Expiring Soon:</span>
-            <span className="font-semibold text-yellow-600">{item.expiringSoon}</span>
-          </div>
+            <span className="font-semibold text-yellow-600">3 hours</span>
+          </div> */}
           <div className="flex justify-between">
             <span className="text-gray-600">Last Updated:</span>
-            <span className="text-gray-500">{item.lastUpdated}</span>
+            <span className="text-gray-500">
+              {item?.LastDonationTime
+                ? new Date(item.LastDonationTime).toLocaleString()
+                : ''}
+            </span>
           </div>
         </div>
-
-        {/* Action Buttons */}
         <div className="mt-4 flex space-x-2">
           <button
             onClick={() => {
@@ -261,12 +284,12 @@ const BloodComponents = () => {
             <FaEye className="w-3 h-3 mr-1" />
             View
           </button>
-          <button
+          {/* <button
             className="flex-1 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 text-xs rounded-md py-2 transition"
           >
             <FaEdit className="w-3 h-3 mr-1" />
             Update
-          </button>
+          </button> */}
         </div>
       </div>
     );
@@ -288,9 +311,9 @@ const BloodComponents = () => {
       <thead className="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
         <tr>
           <th className="px-6 py-4 text-left">Blood Group</th>
-          <th className="px-6 py-4 text-left">Location</th>
+          {/* <th className="px-6 py-4 text-left">Location</th> */}
           <th className="px-6 py-4 text-left">Units</th>
-          <th className="px-6 py-4 text-left">Expiring</th>
+          {/* <th className="px-6 py-4 text-left">Expiring</th> */}
           <th className="px-6 py-4 text-left">Stock</th>
           <th className="px-6 py-4 text-left">Updated</th>
           <th className="px-6 py-4 text-left">Actions</th>
@@ -300,32 +323,32 @@ const BloodComponents = () => {
       {/* Table Body */}
       <tbody className="divide-y divide-gray-100 bg-white">
         {filteredInventory.map((item, index) => {
-          const stockLevel = getStockLevel(item.units);
+          const stockLevel = getStockLevel(item.TotalStock);
 
           return (
             <tr key={index} className="hover:bg-gray-50 transition-all duration-150">
               {/* Blood Group */}
               <td className="px-6 py-5">
                 <span className="inline-block px-2.5 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
-                  {item.group}
+                  {item.BloodType}
                 </span>
               </td>
 
               {/* Location */}
-              <td className="px-6 py-5">
+              {/* <td className="px-6 py-5">
                 <div className="flex items-center gap-2 text-gray-700">
                   <FaMapMarkerAlt className="w-4 h-4 text-gray-400" />
                   <span className="text-sm">{item.location}</span>
                 </div>
-              </td>
+              </td> */}
 
               {/* Units */}
-              <td className="px-6 py-5 font-bold text-base">{item.units}</td>
+              <td className="px-6 py-5 font-bold text-base">{item.TotalStock}</td>
 
               {/* Expiring Soon */}
-              <td className="px-6 py-5 font-semibold text-yellow-600 text-sm">
+              {/* <td className="px-6 py-5 font-semibold text-yellow-600 text-sm">
                 {item.expiringSoon}
-              </td>
+              </td> */}
 
               {/* Stock Level */}
               <td className="px-6 py-5">
@@ -335,7 +358,9 @@ const BloodComponents = () => {
               </td>
 
               {/* Last Updated */}
-              <td className="px-6 py-5 text-sm text-gray-500">{item.lastUpdated}</td>
+              <td className="px-6 py-5 text-sm text-gray-500">{item?.LastDonationTime
+                ? new Date(item.LastDonationTime).toLocaleString()
+                : ''}</td>
 
               {/* Actions */}
               <td className="px-6 py-5">
@@ -409,7 +434,7 @@ const BloodComponents = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Storage Location *</label>
               <select
                 value={newComponent.location}
@@ -421,7 +446,7 @@ const BloodComponents = () => {
                   <option key={location} value={location}>{location}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Donor ID</label>
@@ -492,16 +517,16 @@ const BloodComponents = () => {
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-500">Blood Group:</span>
-                    <p className="text-sm text-gray-900">{selectedComponent.group}</p>
+                    <p className="text-sm text-gray-900">{selectedComponent.BloodType}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Available Units:</span>
-                    <p className="text-sm text-gray-900">{selectedComponent.units}</p>
+                    <p className="text-sm text-gray-900">{selectedComponent.TotalStock}</p>
                   </div>
-                  <div>
+                  {/* <div>
                     <span className="text-sm font-medium text-gray-500">Storage Location:</span>
                     <p className="text-sm text-gray-900">{selectedComponent.location}</p>
-                  </div>
+                  </div> */}
                   <div>
                     <span className="text-sm font-medium text-gray-500">Stock Level:</span>
                     <p className={`text-sm font-medium ${getStockLevel(selectedComponent.units).color}`}>
@@ -516,11 +541,13 @@ const BloodComponents = () => {
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-500">Expiring Soon:</span>
-                    <p className="text-sm text-yellow-600">{selectedComponent.expiringSoon} units</p>
+                    <p className="text-sm text-yellow-600">6{selectedComponent.expiringSoon} units</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500">Last Updated:</span>
-                    <p className="text-sm text-gray-900">{selectedComponent.lastUpdated}</p>
+                    <p className="text-sm text-gray-900">{selectedComponent?.LastDonationTime
+                ? new Date(selectedComponent.LastDonationTime).toLocaleString()
+                : ''}</p>
                   </div>
                 </div>
               </div>
