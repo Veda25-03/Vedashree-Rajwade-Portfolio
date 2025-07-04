@@ -62,7 +62,7 @@ const LoginPage = () => {
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center mb-6">
               <FaHeartbeat className="w-10 h-10 text-primary-600 mr-3" />
-              <span className="text-2xl font-bold text-gray-900">JIVAN BBMS</span>
+              <span className="text-2xl font-bold text-gray-900">JIVAN-DROPS</span>
             </Link>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
             <p className="text-gray-600">Sign in to your account to continue</p>
@@ -208,7 +208,7 @@ const LoginPage = () => {
               to="/"
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              ← Back to Home
+              ← Back to Dashboard
             </Link>
           </div>
         </div>

@@ -147,13 +147,13 @@ const RegisterPage = () => {
 
         <div className="mt-2 text-center">
           <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to Home
+            ← Back to Dashboard
           </Link>
         </div>
 
         {/* Footer */}
         <div className="mt-6 text-center text-xs text-gray-400">
-          Secure registration powered by JIVAN BBMS
+          Secure registration powered by JIVAN-DROPS
         </div>
       </div>
     </div>
