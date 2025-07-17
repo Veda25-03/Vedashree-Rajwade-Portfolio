@@ -57,12 +57,12 @@ const Contact = React.memo(() => {
       url: 'https://www.linkedin.com/in/vedashree-rajwade', // ← Replace with your actual LinkedIn
       color: 'from-blue-600 to-blue-700'
     },
-    {
-      name: 'Canva',
-      icon: SiCanva,
-      url: 'https://www.canva.com/yourprofile', // ← Replace with your actual Canva profile
-      color: 'from-indigo-500 to-purple-500'
-    }
+    // {
+    //   name: 'Canva',
+    //   icon: SiCanva,
+    //   url: 'https://www.canva.com/yourprofile', // ← Replace with your actual Canva profile
+    //   color: 'from-indigo-500 to-purple-500'
+    // }
   ], []);
 
   const sectionClassName = useMemo(() => 
