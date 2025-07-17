@@ -48,7 +48,7 @@ const Contact = React.memo(() => {
     {
       name: 'Behance',
       icon: ExternalLink,
-      url: 'https://www.behance.net/vedashree', // ← Replace with your actual Behance URL
+      url: 'https://www.behance.net/vedashrrajwade', // ← Replace with your actual Behance URL
       color: 'from-blue-500 to-purple-500'
     },
     {
